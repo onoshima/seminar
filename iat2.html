@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<!-- お手軽IAT version 0.10 -->
+<html>
+  <head>
+    <title>IAT</title>
+    <!-- jsPysch関係 -->
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
+    <script src ="plugin-iat-html.js"></script>
+    <script src ="plugin-iat-image.js"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.2.1"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.3"></script>
+    <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <!-- Webフォント関係 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+      * {
+        font-family: "Noto Sans JP", sans-serif;
+        color: white;
+        background-color: black;
+        --concept-color: white;
+        --attribute-color: green;
+        --category-font-size: 30px;
+      }
+      div {
+        background-color: transparent;
+      }
+      span {
+        background-color: transparent;
+      }
+      .jspsych-content{
+        cursor: none;
+      }
+      #jspsych-iat-stim {
+        font-size: 50px;
+      }
+      .category {
+        font-size: var(--category-font-size);
+      }
+      /* for block 2 */
+      div.attribute span {
+        color: var(--attribute-color);
+      }
+      /* for combined blocks */
+      span.attribute.category {
+        color: var(--attribute-color);
+        font-size: var(--category-font-size);
+      }
+      span.concept.category{
+        color: var(--concept-color);
+        font-size: var(--category-font-size);
+      }
+      .concept #jspsych-iat-stim {
+        color: var(--concept-color)
+      }
+      .attribute #jspsych-iat-stim {
+        color: var(--attribute-color)
+      }
+      #instruction {
+        position: absolute;
+        top: 40%;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        margin: auto;
+        width: 800px;
+        text-align: start;
+      }
+      div.iat-image img#jspsych-iat-stim {
+        max-width: 700px;
+        max-height: 300px;
+      }
+    </style>
+  </head>
+  </head>
+  <body></body>
+  <script>
+    const jsPsych = initJsPsych({
+      on_finish: function (data) {
+        //jsPsych.data.get().localSave('csv', filename);
+        window.location = ""
+      }
+    });
+    /* ------------ここから編集する ---------------- */
+
+    /*
+      画面中央に呈示する刺激の設定（テキストは''で囲むこと）
+      画像を表示したいときにはファイルへの相対パスを（'img/stim1.png'のように）書く
+    */
+    let stim_concept1 = ['ImageFile/disabled_person1.jpg', 'ImageFile/disabled_person2.jpg', 'ImageFile/disabled_person3.jpg', 'ImageFile/disabled_person4.jpg', 'ImageFile/disabled_person5.jpg', 'ImageFile/disabled_person6.jpg'];
+    let stim_concept2 = ['ImageFile/non-disabled_person1.jpg', 'ImageFile/non-disabled_person2.jpg', 'ImageFile/non-disabled_person3.jpg', 'ImageFile/non-disabled_person4.jpg', 'ImageFile/non-disabled_person5.jpg', 'ImageFile/non-disabled_person6.jpg'];
+    const stim_attribute1 = ['あほ', 'とろい', 'まぬけ', '愚か', '怠け者', '頭の悪い'];
+    const stim_attribute2 = ['トップ', 'できる', '天才', '頭のいい', '優秀', '利口な'];
+
+    /*
+      画面上部に表示するカテゴリ名を設定する箇所（上の刺激語との対応に注意すること）
+      concept1は前半が左で後半が右，concept2は前半が右で後半が左
+      attribute1が左，attribute2が右に表示される
+      Dスコアは高いことはconcept1とattribute1の潜在的な連合が強いことを意味する
+    */
+    let category_concept1 = ['障害者'];
+    let category_concept2 = ['健常者'];
+    const category_attribute1 = ['無能な'];
+    const category_attribute2 = ['有能な'];
+
+    /* 反応に用いるキー */
+    const left_key = 'E';
+    const right_key = 'I';
+
+    /* それぞれのブロックで各刺激を何回ずつ提示するか */
+    const rep_order = [
+      2,  // block 1
+      2,  // block 2
+      1,  // block 3
+      2,  // block 4
+      4,  // block 5
+      1,  // block 6
+      2   // block 7
+    ];
+
+    /*
+      ブロックの呈示順序の入れ替え設定（デフォルトはfalse）
+      trueにすると前半はconcept1が右，concept2が左
+      後半はconcept1が左でconcept2が右に表示されるようになる
+      Dスコアは同じように正なほどconcept1とattribute1の潜在的な連合の強さを示す
+    */
+    // = false;
+    const reverse_order = jsPsych.randomization.sampleWithoutReplacement([true, false], 1)[0];
+    //console.log(reverse_order);
+
+    /* Inter-trial-interval (iti)試行間のインターバル（ミリ秒で指定） */
+    const iti = 250;
+
+    /* デブリーフィグでDスコアを表示するか（trueだと表示, falseだと非表示） */
+    const feedback_D = false;
+
+    /* ------------ここまで編集する ---------------- */
+    /*
+      ここから先を編集するとプログラムが動作しなくなる可能性があります。
+      jsPsychやJavaScriptの知識がない人はいじらないことをお勧めします。
+    */
+
+    /* reverse block order */
+    if (reverse_order) {
+      let temp_concept1 = stim_concept1;
+      let temp_concept2 = stim_concept2;
+      stim_concept1 = temp_concept2;
+      stim_concept2 = temp_concept1;
+
+      let temp_category1 = category_concept1;
+      let temp_category2 = category_concept2;
+      category_concept1 = temp_category2;
+      category_concept2 = temp_category1;
+    }
+
+    /* define instructions */
+    const make_category_display = function (left, right, class_for_practice) {
+      let html_category = "";
+
+      html_category +=
+        "<div id='trial_left_align' style='position: absolute; top: 18%; left: 20%'>E キーを押す <br>" +
+        "<span class='category " + class_for_practice + " '>"
+      if (left.length == 1) {
+        html_category +=
+          left[0] + "</span>" +
+          "</div>"
+      } else {
+        html_category +=
+          left[0] + "</span><br>" +
+          "または<br>" +
+          "<span class='category attribute'>" + left[1] + "</span>" +
+          "</div>"
+      }
+      html_category +=
+        "<div id='trial_right_align' style='position: absolute; top: 18%; right: 20%'>" +
+        "I キーを押す <br>" +
+        "<span class='category " + class_for_practice + " '>"
+      if (right.length == 1) {
+        html_category +=
+          right[0] + "</span><br>" +
+          "</div>"
+      } else {
+        html_category +=
+          right[0] + "</span><br>" +
+          "または<br>" +
+          "<span class='category attribute'>" + right[1] + "</span>" +
+          "</div>"
+      }
+      return html_category;
+    };
+
+    const instructions = [
+      // before block1
+      make_category_display([category_concept1], [category_concept2], 'concept') + `
+        <div id="instruction">
+          <p>左手の人差し指を ${left_key} のキーに，右手の人差し指を ${right_key} のキーに置いてください。<p>
+          <p>これから単語や画像などの項目が画面中央に次々と表示されます。
+            これらの項目は画面上部に表示されているカテゴリーのいずれかに属しています。
+            呈示された項目が左側のカテゴリーに属している場合には ${left_key} を押してください。
+            呈示された項目が右側のカテゴリーに属している場合には ${right_key} を押してください。</p>
+          <p>押したキーが間違っていた場合には，赤い X が表示されます。
+            その場合には，正しい方のキーを押すと次に進めます。
+            カテゴリー分けは可能な限り<strong>素早く</strong>かつ<strong>正確に</strong>行なってください。</p>
+          <p>スペースキーを押すと課題が始まります。</p>
+        </div>`,
+      // between block 1 and 2
+      make_category_display([category_attribute1], [category_attribute2], 'attribute') + `
+          <div id="instruction">
+          <p>画面上部に注目してください。先ほどとはカテゴリーが変わりました。
+            呈示する項目も変わりますが，これまで同様のルールで分類してください。</p>
+          <p>呈示された項目が左側のカテゴリーに属する場合は ${left_key} を，右側のカテゴリーに属する場合は ${right_key} を押してください。
+            呈示される項目はどちらかのカテゴリーに属しています。</p>
+          <p>分類を間違えた場合には，X（バツ印）が表示されます。
+            その場合は正しい方のキーを押して訂正してください。
+            できるだけ速くかつ正確に回答するようにしてください。</p>
+          <p>スペースキーを押すと課題が始まります。</p>
+          </div>`,
+      // between block 2 and 3
+      make_category_display(
+        [category_concept1, category_attribute1],
+        [category_concept2, category_attribute2]) + `
+          <div id="instruction">
+          <p>画面上部に注目してください。
+            今度はこれまで出てきた4つのカテゴリーがまとめて表示されています。
+            次からは4つのカテゴリーのいずれか1つに属する項目が呈示されます。</p>
+          <p>提示された項目が左のカテゴリーに属する場合には ${left_key} を，右側のカテゴリーに属する場合には ${right_key} を押してください。</p>
+          <p>分類を間違えた場合には，X（バツ印）が表示されます。
+            その場合は正しい方のキーを押して訂正してください。
+            できるだけ速くかつ正確に回答するようにしてください。</p>
+          <p>スペースキーを押すと課題が始まります。</p>
+          </div>`,
+      // between block 3 and 4
+      make_category_display(
+        [category_concept1, category_attribute1],
+        [category_concept2, category_attribute2]) + `
+          <div id="instruction">
+            <p>次も同じように，呈示される項目の分類を続けてください。
+              呈示される項目はいずれか1つのカテゴリーに属しています。</p>
+            <p>呈示された項目が左のカテゴリーに属する場合には ${left_key} を，右側のカテゴリーに属する場合には ${right_key} を押してください。</p>
+            <p>分類を間違えた場合には，X（バツ印）が表示されます。
+            その場合は正しい方のキーを押して訂正してください。
+            できるだけ速くかつ正確に回答するようにしてください。</p>
+            <p>スペースキーを押すと課題が始まります。</p>
+          </div>`,
+      // between block 4 and 5
+      make_category_display(
+        [category_concept2],
+        [category_concept1]) + `
+          <div id="instruction">
+            <p>画面上部に注目してください。
+              今度は再び2つだけカテゴリーが表示されています。
+              ただし，先ほどとは左右の位置が入れ替わっています。
+              行うことは先ほどまでと同様で，呈示される項目のカテゴリー分けです。</p>
+            <p>提示された項目が左のカテゴリーに属する場合には ${left_key} を，右側のカテゴリーに属する場合には ${right_key} を押してください。</p>
+            <p>分類を間違えた場合には，X（バツ印）が表示されます。
+            その場合は正しい方のキーを押して訂正してください。
+            できるだけ速くかつ正確に回答するようにしてください。</p>
+            <p>スペースキーを押すと課題が始まります。</p>
+          </div>
+          `,
+      // between block 5 and 6
+      make_category_display(
+        [category_concept2, category_attribute1],
+        [category_concept1, category_attribute2]) + `
+          <div id="instruction">
+            <p>画面上部に注目してください。
+              今度は4つのカテゴリーが新しい配置で表示されています。
+              これから呈示される項目は4つのカテゴリーのいずれか1つに属しています。</p>
+            <p>呈示された項目が左のカテゴリーに属する場合には ${left_key} を，右側のカテゴリーに属する場合には ${right_key} を押してください。</p>
+            <p>分類を間違えた場合には，X（バツ印）が表示されます。
+            その場合は正しい方のキーを押して訂正してください。
+            できるだけ速くかつ正確に回答するようにしてください。</p>
+            <p>スペースキーを押すと課題が始まります。</p>
+          </div>
+          `,
+      //between block 6 and 7
+      make_category_display(
+        [category_concept2, category_attribute1],
+        [category_concept1, category_attribute2]) + `
+          <div id="instruction">
+            <p>次も同じように，呈示される項目の分類を続けてください。
+            呈示される項目は4つのカテゴリーのいずれか1つに属しています。
+            <p>呈示された項目が左のカテゴリーに属する場合には ${left_key} を，右側のカテゴリーに属する場合には ${right_key} を押してください。</p>
+            <p>分類を間違えた場合には，X（バツ印）が表示されます。
+            その場合は正しい方のキーを押して訂正してください。
+            できるだけ速くかつ正確に回答するようにしてください。</p>
+            <p>スペースキーを押すと課題が始まります。</p>
+          </div>
+          `
+    ]
+
+
+    
+
+    /* set participant id */
+    const participant_id = jsPsych.randomization.randomID(10);
+    const filename = `${participant_id}.csv`;
+
+    jsPsych.data.addProperties({
+      time: 2,
+      participant_id: participant_id,
+      reverse_order: reverse_order,
+    });
+
+    /* block generation */
+    const stim_concept_all = stim_concept1.concat(stim_concept2);
+    const stim_attribute_all = stim_attribute1.concat(stim_attribute2);
+    const stim_all = stim_concept_all.concat(stim_attribute_all);
+    
+    const left_label_order = [
+      category_concept1,
+      category_attribute1,
+      category_concept1.concat(category_attribute1),
+      category_concept1.concat(category_attribute1),
+      category_concept2,
+      category_concept2.concat(category_attribute1),
+      category_concept2.concat(category_attribute1),
+    ];
+    const right_label_order = [
+      category_concept2,
+      category_attribute2,
+      category_concept2.concat(category_attribute2),
+      category_concept2.concat(category_attribute2),
+      category_concept1,
+      category_concept1.concat(category_attribute2),
+      category_concept1.concat(category_attribute2),
+    ];
+    const left_side = [
+      stim_concept1,
+      stim_attribute1,
+      stim_concept1.concat(stim_attribute1),
+      stim_concept1.concat(stim_attribute1),
+      stim_concept2,
+      stim_concept2.concat(stim_attribute1),
+      stim_concept2.concat(stim_attribute1)
+    ];
+
+    function is_stim_image(path) {
+      let path_lower = path.toLowerCase();
+      if (path_lower.endsWith('.png') ||
+        path_lower.endsWith('.jpg') ||
+        path_lower.endsWith('.jpeg') ||
+        path_lower.toLowerCase().endsWith('.gif')) {
+        return true
+      } else {
+        return false
+      }
+    };
+
+    function includes_subarray(subarray, array) {
+      for (let i = 0; i < array.length - subarray.length + 1; i++) {
+        for (let j = 0; j < subarray.length; j++) {
+          if (array[i + j] != subarray[j]) break;
+          if (j == subarray.length - 1) return true;
+        }
+      }
+      return false;
+    }
+
+    const blocks = {};
+    for (let i = 1; i <= 7; i++) {
+      let includes_five_concective = true;
+
+      let temp_block = []
+
+      while (includes_five_concective) {
+        let temp_stimuli = [];
+        if (i == 1 || i == 5) {
+          temp_stimuli = jsPsych.randomization.repeat(stim_concept_all, rep_order[i - 1]);
+        } else if (i == 2) {
+          temp_stimuli = jsPsych.randomization.repeat(stim_attribute_all, rep_order[i - 1]);
+        } else if (i == 3 || i == 4 || i == 6 || i == 7) {
+          let temp_concept = jsPsych.randomization.repeat(stim_concept_all, rep_order[i - 1]);
+          let temp_attribute = jsPsych.randomization.repeat(stim_attribute_all, rep_order[i - 1]);
+
+          if (temp_concept.length == temp_attribute.length) {
+            /* strict alternation */
+            for (let h = 0; h < temp_concept.length; h++) {
+              temp_stimuli.push(temp_concept[h]);
+              temp_stimuli.push(temp_attribute[h]);
+            }
+          } else {
+            temp_stimuli = jsPsych.randomization.repeat(temp_concept.concat(temp_attribute), 1);
+          }
+        };
+
+        for (let j = 0; j < temp_stimuli.length; j++) {
+          temp_block[j] = {};
+          temp_block[j].block = i;
+          temp_block[j].stimulus = temp_stimuli[j];
+          temp_block[j].left_label = left_label_order[i - 1];
+          temp_block[j].right_label = right_label_order[i - 1];
+          if (left_side[i - 1].includes(temp_block[j].stimulus)) {
+            temp_block[j].key_association = 'left';
+          } else {
+            temp_block[j].key_association = 'right';
+          }
+          if (is_stim_image(temp_block[j].stimulus)) {
+            temp_block[j].type = 'image';
+          } else {
+            temp_block[j].type = 'text';
+          }
+          if (stim_concept_all.includes(temp_block[j].stimulus)) {
+            temp_block[j].css_classes = 'concept'
+          } else {
+            temp_block[j].css_classes = 'attribute'
+          }
+        }
+
+        // check five concective same correct keys trials
+        let array_key_association = temp_block.map(p => [p.key_association]).flat();
+        if (i == 3 || i == 4 || i == 6 || i == 7) {
+          if (
+            !includes_subarray(new Array(5).fill('right'), array_key_association) &&
+            !includes_subarray(new Array(5).fill('left'), array_key_association)
+          ) {
+            includes_five_concective = false;
+          }
+        } else {
+          includes_five_concective = false;
+        }
+      }
+
+      blocks['block' + i] = temp_block;
+    }
+    const timeline = [];
+
+    /* preload images */
+    let images_path = [];
+    for (let i = 0; i < stim_all.length; i++) {
+      if (stim_all[i].toLowerCase().endsWith('.png') ||
+        stim_all[i].toLowerCase().endsWith('.jpg') ||
+        stim_all[i].toLowerCase().endsWith('.jpeg') ||
+        stim_all[i].toLowerCase().endsWith('.gif')) {
+        images_path.push(stim_all[i])
+      }
+    }
+    const preload = {
+      type: jsPsychPreload,
+      images: images_path
+    };
+    timeline.push(preload);
+
+    /* define enter fullscreen */
+    const enter_fullscreen = {
+      type: jsPsychFullscreen,
+      message: `
+          <p>この実験はフルスクリーンモードで行います。</p>
+          <p>以下のボタンを押すとフルスクリーンモードに変わります。</p>
+          <p>途中で中止したいときには，Escキーで解除してブラウザを閉じてください。</p>
+          </div>
+          `,
+      button_label: 'フルスクリーンモードへ',
+      fullscreen_mode: true,
+    };
+    timeline.push(enter_fullscreen);
+
+    const iat_text = {
+      type: jsPsychIatHtml,
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      stim_key_association: jsPsych.timelineVariable('key_association'),
+      html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+      bottom_instructions:
+        '<p>間違えると，赤い X が表示されます。続けるには正しいキーを押します。</p>',
+      force_correct_key_press: true,
+      display_feedback: true,
+      left_category_key: left_key,
+      right_category_key: right_key,
+      left_category_label: jsPsych.timelineVariable('left_label'),
+      right_category_label: jsPsych.timelineVariable('right_label'),
+      response_ends_trial: true,
+      css_classes: jsPsych.timelineVariable('css_classes'),
+      data: {
+        block: jsPsych.timelineVariable('block'),
+      }
+    };
+    const iat_image = {
+      type: jsPsychIatImage,
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      stim_key_association: jsPsych.timelineVariable('key_association'),
+      html_when_wrong: '<span style="color: red; font-size: 80px">X</span>',
+      bottom_instructions:
+        '<p>間違えると，赤い X が表示されます。続けるには正しいキーを押します。</p>',
+      force_correct_key_press: true,
+      display_feedback: true,
+      left_category_key: left_key,
+      right_category_key: right_key,
+      left_category_label: jsPsych.timelineVariable('left_label'),
+      right_category_label: jsPsych.timelineVariable('right_label'),
+      response_ends_trial: true,
+      css_classes: 'iat-image',
+      data: {
+        block: jsPsych.timelineVariable('block'),
+      }
+    }
+
+    const is_text = {
+      timeline: [iat_text],
+      conditional_function: function () {
+        if (jsPsych.timelineVariable('type') == 'text') {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+
+    const is_image = {
+      timeline: [iat_image],
+      conditional_function: function () {
+        if (jsPsych.timelineVariable('type') == 'image') {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+
+    for (i = 1; i <= 7; i++) {
+      let instruction = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: instructions[i - 1],
+        choices: ' ',
+      };
+      timeline.push(instruction);
+
+      let test_procedure = {
+        timeline: [is_text, is_image],
+        timeline_variables: blocks['block' + i],
+        repetition: 1
+      }
+      timeline.push(test_procedure);
+    }
+
+    function culc_D() {
+      let fast_subject = false;
+      const trials_less_10000 = jsPsych.data.get().filterCustom(
+        function (x) { return x.rt_last_response < 100000 }
+      ).filter(
+        [{ block: 3 }, { block: 4 }, { block: 6 }, { block: 7 }]
+      );
+      const num_test_trials = trials_less_10000.trials.length;
+      const num_less300_trials = trials_less_10000.filterCustom(function (x) { return x.rt_last_response < 300 }).trials.length;
+      const fast_response_rate = num_less300_trials / num_test_trials;
+      fast_subject = fast_response_rate > .10;
+
+      const block36 = trials_less_10000.filter([{ block: 3 }, { block: 6 }]);
+      const block47 = trials_less_10000.filter([{ block: 4 }, { block: 7 }]);
+      const SD_36 = block36.select('rt_last_response').sd();
+      const SD_47 = block47.select('rt_last_response').sd();
+      const M_3 = trials_less_10000.filter({ block: 3 }).select('rt_last_response').mean();
+      const M_4 = trials_less_10000.filter({ block: 4 }).select('rt_last_response').mean();
+      const M_6 = trials_less_10000.filter({ block: 6 }).select('rt_last_response').mean();
+      const M_7 = trials_less_10000.filter({ block: 7 }).select('rt_last_response').mean();
+      let D = 0.5 * ((M_6 - M_3) / SD_36 + (M_7 - M_4) / SD_47);
+      if (reverse_order) {
+        D = -1 * D;
+      }
+      const res = {
+        D: D,
+        fast_response_rate: fast_response_rate,
+        fast_subject: fast_subject
+      }
+      return res
+    };
+
+    /* define debrief */
+    const debrief_block = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: function () {
+        let html_str = "<p>本日は研究へと参加いただきありがとうございました。</p>";
+        if (feedback_D) {
+          let D = Math.round(culc_D().D * 1000) / 1000;
+          html_str = +
+            `<p>あなたのDスコアは ${D} です。</p>`
+        }
+
+        return html_str;
+      },
+      prompt: '<p>エンターキーを押すと実験を終了します。</p>',
+      choices: ['Enter'],
+      data: function () {
+        let res = culc_D();
+        return {
+          D: res.D,
+          fast_response_rate: res.fast_response_rate,
+          fast_subject: res.fast_subject
+        }
+      }
+    }
+    timeline.push(debrief_block);
+
+    // define exit fullscreen
+    const exit_fullscreen = {
+      type: jsPsychFullscreen,
+      delay_after: 0,
+      fullscreen_mode: false,
+    };
+    timeline.push(exit_fullscreen);
+
+    jsPsych.run(timeline);
+  </script>
+</html>
