@@ -114,7 +114,7 @@ var jsPsychIatHtml = (function (jspsych) {
           html_str += "<div id='trial_left_align' style='position: absolute; top: 18%; left: 20%'>";
           if (trial.left_category_label.length == 1) {
               html_str +=
-                      trial.left_category_key.bold() +
+                      trial.left_category_key +
                       " キーを押す <br>" +
                       "<span class='category'>" +
                       trial.left_category_label[0] +
@@ -123,7 +123,7 @@ var jsPsychIatHtml = (function (jspsych) {
           }
           else {
               html_str +=
-                      trial.left_category_key.bold() +
+                      trial.left_category_key +
                       " キーを押す <br>" +
                       "<span class='category concept'>" +
                       trial.left_category_label[0] +
@@ -138,7 +138,7 @@ var jsPsychIatHtml = (function (jspsych) {
           html_str += "<div id='trial_right_align' style='position: absolute; top: 18%; right: 20%'>";
           if (trial.right_category_label.length == 1) {
               html_str +=
-                      trial.right_category_key.bold() +
+                      trial.right_category_key +
                       " キーを押す <br>" +
                       "<span class='category'>" +
                       trial.right_category_label[0] +
@@ -147,7 +147,7 @@ var jsPsychIatHtml = (function (jspsych) {
           }
           else {
               html_str +=
-                      trial.right_category_key.bold() +
+                      trial.right_category_key +
                       " キーを押す <br>" +
                       "<span class='category concept'>" +
                       trial.right_category_label[0] +
