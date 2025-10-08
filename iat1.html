@@ -296,8 +296,10 @@
     
 
     /* set participant id */
-    const participant_id = jsPsych.randomization.randomID(10);
+    const urlvar = jsPsych.data.urlVariables();
+    const participant_id = urlvar.participantID;
     const filename = `${participant_id}.csv`;
+    console.log(participant_id);
 
     jsPsych.data.addProperties({
       time: 1,
