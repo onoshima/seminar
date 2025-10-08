@@ -81,7 +81,9 @@
     const jsPsych = initJsPsych({
       on_finish: function (data) {
         //jsPsych.data.get().localSave('csv', filename);
-        window.location = ""
+        window.parent.postMessage({
+          event: "experimentFinished",
+        }, "*");
       }
     });
     /* ------------ここから編集する ---------------- */
