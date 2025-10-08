@@ -81,8 +81,12 @@
     const jsPsych = initJsPsych({
       on_finish: function (data) {
         //jsPsych.data.get().localSave('csv', filename);
+        let res = jsPsych.data.get().filter({block: 'debrief'}).filterColumns(['D', 'fast_response_rate', 'fast_subject']);
         window.parent.postMessage({
           event: "experimentFinished",
+          D: res.select('D').values[0],
+          fast_response_rate: res.select('fast_response_rate').values[0],
+          fast_subject: res.select('fast_subject').values[0]
         }, "*");
       }
     });
@@ -571,14 +575,6 @@
       return res
     };
 
-    const save_data = {
-      type: jsPsychPipe,
-      action: "save",
-      experiment_id: "aUUfWy909ze5",
-      filename: filename,
-      data_string: ()=>jsPsych.data.get().csv()
-    };
-    timeline.push(save_data);    
 
     /* define debrief */
     const debrief_block = {
@@ -598,6 +594,7 @@
       data: function () {
         let res = culc_D();
         return {
+          block: 'debrief',
           D: res.D,
           fast_response_rate: res.fast_response_rate,
           fast_subject: res.fast_subject
@@ -605,6 +602,15 @@
       }
     }
     timeline.push(debrief_block);
+
+    const save_data = {
+      type: jsPsychPipe,
+      action: "save",
+      experiment_id: "aUUfWy909ze5",
+      filename: filename,
+      data_string: ()=>jsPsych.data.get().csv()
+    };
+    timeline.push(save_data);    
 
     // define exit fullscreen
     const exit_fullscreen = {
