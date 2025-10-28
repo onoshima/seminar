@@ -545,7 +545,7 @@
     function culc_D() {
       let fast_subject = false;
       const trials_less_10000 = jsPsych.data.get().filterCustom(
-        function (x) { return x.rt_last_response < 100000 }
+        function (x) { return x.rt_last_response < 10000 }
       ).filter(
         [{ block: 3 }, { block: 4 }, { block: 6 }, { block: 7 }]
       );
